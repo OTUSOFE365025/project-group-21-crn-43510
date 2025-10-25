@@ -10,9 +10,9 @@ Quality attributes define *how well* the system should perform its functions.
 
 ### Performance and Latency
 The system must be responsive and efficient under load.
-* [cite_start]**Response Time:** It must respond to student queries within **2 seconds** on average under normal load[cite: 11].
-* [cite_start]**Load Handling:** It must support scalability to handle up to **5,000 concurrent users**[cite: 15].
-* [cite_start]**Monitoring:** Performance metrics for AI model accuracy and latency must be logged[cite: 17].
+* **Response Time:** It must respond to student queries within **2 seconds** on average under normal load[cite: 11].
+* **Load Handling:** It must support scalability to handle up to **5,000 concurrent users**[cite: 15].
+* **Monitoring:** Performance metrics for AI model accuracy and latency must be logged[cite: 17].
 
 ### Availability and Reliability
 The system must be operational and dependable.

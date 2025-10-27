@@ -59,3 +59,64 @@ The system should adapt to individual user needs.
 * **Localization:** It must support **multi-language queries** and responses.
 * **Offline Capability:** It must support an **offline cache** of recent responses for limited connectivity.
 * **Data Integrity:** It must maintain data integrity and consistency across systems.
+
+---
+
+## Quality Scenarios (ADD Format)
+
+The following scenarios specify measurable conditions and expected responses, following the **Attribute-Driven Design (ADD)** approach.
+
+### **1. Performance and Latency**
+**Scenario:**  
+*When* a student submits a query during normal operating conditions,  
+*the system* must process and return a response within **2 seconds on average**,  
+*so that* the user experience remains efficient and responsive.  
+
+**Response Measure:** Average query latency ≤ **2 seconds** under normal load.  
+**Rationale:** Ensures smooth, real-time conversational performance.
+
+---
+
+### **2. Availability and Reliability**
+**Scenario:**  
+*When* the system experiences component failure or downtime,  
+*it* must automatically trigger **fail-over** and **recovery** mechanisms,  
+*so that* service continuity is maintained with minimal disruption.  
+
+**Response Measure:** Service restored within **30 seconds**, maintaining **99.5% uptime** monthly.  
+**Rationale:** Guarantees dependable access for students and faculty.
+
+---
+
+### **3. Security and Access Control**
+**Scenario:**  
+*When* a user attempts to log in,  
+*the system* must authenticate via the institution’s **single sign-on (SSO)** and enforce **role-based access controls**,  
+*so that* only authorized users can access or modify data.  
+
+**Response Measure:** 100% of authentication requests validated through SSO; unauthorized access denied.  
+**Rationale:** Protects academic and personal data integrity.
+
+---
+
+### **4. Usability and Accessibility**
+**Scenario:**  
+*When* a student interacts with AIDAP through **text or voice input** on any supported device,  
+*the system* must process both input types accurately and display responses through an intuitive conversational interface,  
+*so that* it remains accessible across platforms.  
+
+**Response Measure:** 95% of users can complete a standard query task within **three interactions**.  
+**Rationale:** Promotes accessibility and user satisfaction.
+
+---
+
+### **5. Maintainability and Monitoring**
+**Scenario:**  
+*When* performance or error metrics are generated,  
+*the platform* must log these events to a centralized **monitoring dashboard**,  
+*so that* administrators can detect and resolve issues promptly.  
+
+**Response Measure:** All system components report metrics every **60 seconds**; alerts raised within **5 minutes** of issue detection.  
+**Rationale:** Enables proactive maintenance and rapid troubleshooting.
+
+---

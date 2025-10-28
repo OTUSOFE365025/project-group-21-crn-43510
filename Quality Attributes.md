@@ -9,6 +9,7 @@ The system must be responsive and efficient under load.
 * **Response Time:** It must respond to student queries within **2 seconds** on average under normal load.
 * **Load Handling:** It must support scalability to handle up to **5,000 concurrent users**.
 * **Monitoring:** Performance metrics for AI model accuracy and latency must be logged.
+* UC-1, UC-2, UC-3, UC-4, UC-6, UC-7, UC-8, UC-9
 
 ### Availability and Reliability
 The system must be operational and dependable.
@@ -16,6 +17,7 @@ The system must be operational and dependable.
 * **High Availability:** It must provide high availability, including automatic **fail-over and backup recovery** mechanisms.
 * **Graceful Failure:** It must handle failures in data source availability gracefully, with **retry and recovery** processes.
 * **Deployment:** Updates must be deployable with **zero downtime**.
+* UC-1, UC-3, UC-7, UC-8, UC-9, UC-10
 
 ### Security
 The system must protect user data and control access.
@@ -24,6 +26,7 @@ The system must protect user data and control access.
 * **Access Control (Students):** Student-specific data must be visible **only to the authenticated user**.
 * **Access Control (Lecturers):** **Only authorized lecturers** can modify course data.
 * **Access Control (Maintenance):** It must support **role-based access** for maintenance operations.
+* UC-1, UC-4, UC-5, UC-10
 
 ### Usability and Accessibility
 The system must be intuitive and easy to interact with across different platforms.
@@ -31,6 +34,7 @@ The system must be intuitive and easy to interact with across different platform
 * **Interaction Modes:** It must support both **text and voice** interaction modes.
 * **Device Accessibility:** It must be accessible on **mobile, web, and voice-assistant devices**.
 * **UI Design:** The system must have an **intuitive UI** consistent with conversational design best practices.
+* UC-2, UC-3, UC-4, UC-5, UC-6, UC-7
 
 ### Scalability
 The system must be able to grow to meet increased demand.
@@ -43,22 +47,26 @@ The system must be easy to update, monitor, and expand.
 * **Extensibility:** It must be **easily extensible** to integrate new AI services or external data sources.
 * **Configuration:** Maintainers must be able to configure AI model versions and API keys.
 * **Deployment:** It must use **continuous deployment pipelines** for updates.
+* UC-5, UC-6, UC-9, UC-10
 
 ### Interoperability
 The system must successfully connect and exchange data with other systems.
 * **Integration:** It must integrate with existing data sources like **registration, LMS, and calendars**.
 * **Synchronization:** It must synchronize data with connected university systems at **configurable intervals**.
+* UC-5, UC-6, UC-8
 
 ### Personalization and Adaptability
 The system should adapt to individual user needs.
 * **History:** It must store **historical interactions** for personalization.
 * **Learning:** It must **learn from previous conversations** to improve response relevance.
 * **Preferences:** Students must be able to change preferences for notifications and language.
+* UC-2, UC-3, UC-4
 
 ### Other Attributes
 * **Localization:** It must support **multi-language queries** and responses.
 * **Offline Capability:** It must support an **offline cache** of recent responses for limited connectivity.
 * **Data Integrity:** It must maintain data integrity and consistency across systems.
+* UC-8, UC-9, UC-10
 
 ---
 

@@ -7,7 +7,7 @@ Kingsley Qiu - Handled the use cases and the architectual concerns
 
 Aaraan Mahmood - Handled the quality attributes/scenarios and the system constraints
 
-Farhan Shameer - Handled the business case logic
+Farhan Shameer - Handled the business case
 
 
 Deliverable 1: Requirements Analysis

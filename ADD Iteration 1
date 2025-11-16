@@ -1,10 +1,9 @@
 ADD — Iteration 1 (AIDAP)
 
-This single-file Architectural Design Document (ADD) contains all artifacts for Iteration 1 of AIDAP (AI‑Powered Digital Assistant Platform): logical & deployment architecture, sequence diagrams and methods, quality attributes, design decisions, analysis and progress, a minimal API skeleton, and grading guidance mapped to the rubric.
+This Architectural Design Document (ADD) contains all artifacts for Iteration 1 of AIDAP (AI‑Powered Digital Assistant Platform): logical & deployment architecture, sequence diagrams and methods, quality attributes, design decisions, analysis and progress
 
 --------------------------------------------------------------------------------
 Table of contents
-- Purpose & Checklist
 - Logical Architecture
   - Architecture diagram (mermaid)
   - Component table
@@ -29,27 +28,6 @@ Table of contents
 - Example API Skeleton (for iteration demo)
 - Scoring guidance / rubric mapping
 - Tips to ensure full marks
-
---------------------------------------------------------------------------------
-Purpose & Checklist
-
-Purpose:
-- Provide logical & deployment architecture relevant to AIDAP.
-- Provide sequence diagrams for iteration 1 use cases.
-- Describe quality attributes addressed in iteration 1 and how they are implemented / tested.
-- Record design decisions and analysis including progress.
-
-Checklist mapped to rubric (aim for "Exceeds"):
-- [x] Logical architecture diagram (domain-specific elements + component table)
-- [x] Sequence diagrams (3 use cases) + methods table
-- [x] Deployment diagram + deployment table
-- [x] Quality attributes described + proof-of-address (tests / instrumentation)
-- [x] Design decisions table for iteration 1 (with alternatives & justification)
-- [x] Analysis of decisions + progress table
-
-How to review:
-- View the mermaid diagrams below (they are included in this file) or export them as PNG/SVG for uploading to the repo.
-- See the sections for ARCHITECTURE, SEQUENCES, DEPLOYMENT, QUALITY_ATTRIBUTES, DESIGN_DECISIONS, ANALYSIS for details.
 
 --------------------------------------------------------------------------------
 Logical Architecture

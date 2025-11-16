@@ -1,41 +1,37 @@
-Include in this file the 7 steps for Iteration 1
-
-# ADD — Iteration 1 (AIDAP)
+ADD — Iteration 1 (AIDAP)
 
 This single-file Architectural Design Document (ADD) contains all artifacts for Iteration 1 of AIDAP (AI‑Powered Digital Assistant Platform): logical & deployment architecture, sequence diagrams and methods, quality attributes, design decisions, analysis and progress, a minimal API skeleton, and grading guidance mapped to the rubric.
 
----
-
+--------------------------------------------------------------------------------
 Table of contents
-- [Purpose & Checklist](#purpose--checklist)
-- [Logical Architecture](#logical-architecture)
+- Purpose & Checklist
+- Logical Architecture
   - Architecture diagram (mermaid)
   - Component table
   - Rationale & acceptance
-- [Sequence Diagrams & Methods](#sequence-diagrams--methods)
+- Sequence Diagrams & Methods
   - Use Cases
   - Sequence 1: Student fetches deadlines
   - Sequence 2: Faculty posts announcement
   - Sequence 3: Admin requests analytics
   - Methods tables
-- [Deployment Architecture](#deployment-architecture)
+- Deployment Architecture
   - Deployment diagram
   - Deployment table
   - Minimal deployment checklist
-- [Quality Attributes](#quality-attributes)
+- Quality Attributes
   - Selected attributes, implementation, and tests
-- [Design Decisions](#design-decisions)
+- Design Decisions
   - Decision table with alternatives and justification
-- [Analysis & Progress](#analysis--progress)
+- Analysis & Progress
   - Summary and progress table
   - Recommended next concrete tasks
-- [Example API Skeleton (for iteration demo)](#example-api-skeleton-for-iteration-demo)
-- [Scoring guidance / rubric mapping](#scoring-guidance--rubric-mapping)
-- [Tips to ensure full marks](#tips-to-ensure-full-marks)
+- Example API Skeleton (for iteration demo)
+- Scoring guidance / rubric mapping
+- Tips to ensure full marks
 
----
-
-## Purpose & Checklist
+--------------------------------------------------------------------------------
+Purpose & Checklist
 
 Purpose:
 - Provide logical & deployment architecture relevant to AIDAP.
@@ -52,15 +48,14 @@ Checklist mapped to rubric (aim for "Exceeds"):
 - [x] Analysis of decisions + progress table
 
 How to review:
-- View the mermaid diagrams below or export them as PNG/SVG for uploading to the repo.
+- View the mermaid diagrams below (they are included in this file) or export them as PNG/SVG for uploading to the repo.
 - See the sections for ARCHITECTURE, SEQUENCES, DEPLOYMENT, QUALITY_ATTRIBUTES, DESIGN_DECISIONS, ANALYSIS for details.
 
----
+--------------------------------------------------------------------------------
+Logical Architecture
 
-## Logical Architecture
-
-### Architecture diagram (mermaid)
-```mermaid
+Architecture diagram (mermaid)
+MERMAID DIAGRAM START
 graph TD
   User[User (Student / Faculty / Admin)]
   WebUI[Web UI / Chat UI]
@@ -88,9 +83,9 @@ graph TD
   Core --> Mail
   Core --> Analytics
   AI --> VectorDB
-```
+MERMAID DIAGRAM END
 
-### Component table (domain-specific)
+Component table (domain-specific)
 - API Gateway / REST API
   - Description: Single entry point for UI and external clients; routes to services, rate-limits.
   - Responsibilities: Authentication, request validation, routing, metrics.
@@ -144,19 +139,16 @@ Acceptance for "Exceeds":
 - Diagram contains domain-specific elements above.
 - Table lists each element with clear descriptions and responsibilities.
 
----
+--------------------------------------------------------------------------------
+Sequence Diagrams & Methods
 
-## Sequence Diagrams & Methods
-
-### Use Cases for Iteration 1 (chosen)
+Use Cases for Iteration 1 (chosen)
 1. Student asks: "What are my deadlines for CS101 this week?"
 2. Faculty posts announcement via UI -> Sync to LMS and notify students.
 3. Admin requests: "Show course enrollment analytics for last week."
 
----
-
-### Sequence 1: Student fetches deadlines (mermaid)
-```mermaid
+Sequence 1: Student fetches deadlines (mermaid)
+MERMAID DIAGRAM START
 sequenceDiagram
   participant U as User (Student)
   participant UI as Web UI
@@ -179,7 +171,7 @@ sequenceDiagram
   AI->>Core: generated response
   Core->>API: return response
   API->>UI: render response
-```
+MERMAID DIAGRAM END
 
 Methods table (map diagram lifelines to names and methods)
 - API Gateway
@@ -198,10 +190,8 @@ Methods table (map diagram lifelines to names and methods)
 
 Naming & syntax: Method names above should be used in code stubs and tests for consistency with the rubric.
 
----
-
-### Sequence 2: Faculty posts announcement (mermaid)
-```mermaid
+Sequence 2: Faculty posts announcement (mermaid)
+MERMAID DIAGRAM START
 sequenceDiagram
   participant F as Faculty UI
   participant API as API Gateway
@@ -218,17 +208,15 @@ sequenceDiagram
   Core->>Mail: sendCourseNotification(courseId, payload)
   Core-->>API: 201 Created
   API->>F: 201 Created
-```
+MERMAID DIAGRAM END
 
 Methods table:
 - createAnnouncement(courseId, payload)
 - createAnnouncementInLMS(courseId, payload)
 - sendCourseNotification(courseId, payload)
 
----
-
-### Sequence 3: Admin requests analytics (mermaid)
-```mermaid
+Sequence 3: Admin requests analytics (mermaid)
+MERMAID DIAGRAM START
 sequenceDiagram
   participant A as Admin UI
   participant API as API Gateway
@@ -245,7 +233,7 @@ sequenceDiagram
   Analytics-->>Core: return stats
   Core-->>API: return result
   API->>A: render chart
-```
+MERMAID DIAGRAM END
 
 Methods table:
 - getEnrollmentStats(from,to)
@@ -256,12 +244,11 @@ Acceptance for "Exceeds":
 - Methods table describes the methods for each lifeline and use-case-related endpoints.
 - Method names reflect proper function call / REST syntax.
 
----
+--------------------------------------------------------------------------------
+Deployment Architecture
 
-## Deployment Architecture
-
-### Deployment diagram (mermaid)
-```mermaid
+Deployment diagram (mermaid)
+MERMAID DIAGRAM START
 graph LR
   subgraph Cloud
     LB[Load Balancer]
@@ -283,9 +270,9 @@ graph LR
   CORE --> REDIS
   CORE --> MQ
   CORE --> STORAGE
-```
+MERMAID DIAGRAM END
 
-### Deployment table
+Deployment table
 - Load Balancer
   - Env: Cloud LB (AWS ALB / GCP LB)
   - Purpose: expose API, TLS termination
@@ -315,14 +302,13 @@ Acceptance for "Exceeds":
 - Table lists elements and their deployment environment and purpose.
 - Note: include a short security note for production (VPC, subnets, DB private, TLS).
 
-### Minimal deployment checklist to show iteration progress:
+Minimal deployment checklist to show iteration progress:
 - Deploy API and Core to a single VM or dev k8s cluster
 - Use managed Postgres and Redis or local docker-compose for demo
 - Configure env variables for AI keys and LMS test credentials (do not commit secrets)
 
----
-
-## Quality Attributes
+--------------------------------------------------------------------------------
+Quality Attributes
 
 Goal: Address a small number of quality attributes well for iteration 1. Strive for clarity and implementable checks.
 
@@ -367,46 +353,58 @@ Suggested quick test skeletons (to add under tests/):
 - tests/test_authorization.py: asserts unauthorized user cannot fetch deadlines
 - tests/test_retry_behavior.py: verifies fallback when AI times out
 
----
-
-## Design Decisions
+--------------------------------------------------------------------------------
+Design Decisions
 
 This table lists decisions made during iteration 1, alternatives, trade-offs, and justification.
 
-| Decision ID | Decision | Alternatives considered | Trade-offs / Rationale | Status |
-|-------------|----------|-------------------------|------------------------|--------|
-| DD-1 | Use a hybrid LLM + retrieval architecture (LLM with vector DB) | LLM-only; pure rules engine | Hybrid gives grounded answers, reduces hallucinations. LLM-only simpler but less accurate for institutional facts. | Chosen |
-| DD-2 | Use adapters for each external system (LMS, Calendar, Mail) | Direct code in Core | Adapters decouple integrations, easier to test and replace. Slight overhead to implement adapters. | Chosen |
-| DD-3 | Store sessions in Redis for short-lived context | Store in Postgres | Redis gives faster read/write for conversational state, TTL support. Postgres for long-term archival only. | Chosen |
-| DD-4 | Use managed vector DB (Pinecone) for Iteration 1 | Self-hosted Milvus | Managed reduces ops overhead for demo; higher cost. | Chosen (re-evaluate later) |
-| DD-5 | OpenAI managed model as first AI Engine | Self-hosted LLM on GPU | Faster to implement + reliable for demo. Self-hosting gives control/cost savings at scale. | Chosen (iteration 1) |
+Decision table:
+- DD-1: Use a hybrid LLM + retrieval architecture (LLM with vector DB)
+  - Alternatives: LLM-only; pure rules engine
+  - Trade-offs / Rationale: Hybrid gives grounded answers, reduces hallucinations. LLM-only simpler but less accurate for institutional facts.
+  - Status: Chosen
+
+- DD-2: Use adapters for each external system (LMS, Calendar, Mail)
+  - Alternatives: Direct code in Core
+  - Trade-offs: Adapters decouple integrations, easier to test and replace. Slight overhead to implement adapters.
+  - Status: Chosen
+
+- DD-3: Store sessions in Redis for short-lived context
+  - Alternatives: Store in Postgres
+  - Trade-offs: Redis gives faster read/write for conversational state, TTL support. Postgres for long-term archival only.
+  - Status: Chosen
+
+- DD-4: Use managed vector DB (Pinecone) for Iteration 1
+  - Alternatives: Self-hosted Milvus
+  - Trade-offs: Managed reduces ops overhead for demo; higher cost.
+  - Status: Chosen (re-evaluate later)
+
+- DD-5: OpenAI managed model as first AI Engine
+  - Alternatives: Self-hosted LLM on GPU
+  - Trade-offs: Faster to implement + reliable for demo. Self-hosting gives control/cost savings at scale.
+  - Status: Chosen (iteration 1)
 
 Acceptance for "Exceeds":
 - Table exists for iteration 1 & 2 (for now iteration 1 table above).
 - Each decision has justification and at least one alternative with trade-offs.
 
----
-
-## Analysis & Progress
+--------------------------------------------------------------------------------
+Analysis & Progress
 
 Summary of analysis:
 - Using hybrid retrieval + LLM reduces hallucinations for institutional facts and makes it straightforward to answer deadline and announcement queries with citations.
 - Adapter pattern isolates integration complexity (LMS / Calendar) so we can implement mock adapters for iteration 1 and replace them later.
 
 Progress table (example)
-| Item | Description | Status | Proof / Link |
-|------|-------------|--------|--------------|
-| Logical Architecture | Diagrams + component table | Complete | This file: ARCHITECTURE section |
-| Sequences | 3 use case diagrams + methods | Complete | This file: SEQUENCES section |
-| Deployment | Dev deployment diagram + table | Complete | This file: DEPLOYMENT section |
-| Quality Attributes | Security, Availability, Latency documented | In progress | See QUALITY_ATTRIBUTES section; tests to add |
-| Design Decisions | DD table created | Complete | This file: DESIGN_DECISIONS section |
-| Implementation | API skeleton + mock adapters | Partially done | Example skeleton included below — integrate in repo |
+- Logical Architecture: Diagrams + component table — Complete — this file (ARCHITECTURE section)
+- Sequences: 3 use case diagrams + methods — Complete — this file (SEQUENCES section)
+- Deployment: Dev deployment diagram + table — Complete — this file (DEPLOYMENT section)
+- Quality Attributes: Security, Availability, Latency documented — In progress — see QUALITY_ATTRIBUTES section; tests to add
+- Design Decisions: DD table created — Complete — see DESIGN_DECISIONS section
+- Implementation: API skeleton + mock adapters — Partially done — example skeleton included below — integrate in repo
 
 Recommended next concrete tasks:
 1. Create simple API skeleton in repo that exposes the listed endpoints (one-file demo is fine).
 2. Add 2 tests under tests/ to prove authorization and retry behaviour and wire them into CI.
 3. Export diagrams to PNG and add to folder for easy grading.
 4. Add short demo screencast or screenshots of endpoints returning data.
-
----

@@ -1,1 +1,436 @@
 Include in this file the 7 steps for Iteration 2
+
+# ADD — Iteration 2 (AIDAP)
+
+This single-file Architectural Design Document (ADD) contains all Iteration 2 artifacts for AIDAP (AI‑Powered Digital Assistant Platform). Iteration 2 extends and hardens Iteration 1 by moving from mock/demo components toward production-ready patterns: stronger integrations, improved retrieval and embedding pipeline, observability, security/compliance, and deployment automation.
+
+Table of contents
+- Purpose & Goals
+- Iteration 2 scope and deliverables
+- Logical Architecture (mermaid)
+- Component table & responsibilities (iteration 2 specifics)
+- Sequence diagrams & methods (3 iteration-2 use cases)
+- Deployment architecture (mermaid + table)
+- Quality attributes (addressed in iteration 2) & tests/evidence
+- Design decisions (iteration 2)
+- Analysis & Progress (iteration 1 -> iteration 2)
+- Implementation work items & code examples
+- Acceptance criteria mapped to rubric
+- Next steps & checklist
+
+---
+
+## Purpose & Goals
+
+Iteration 2 goal: evolve the AIDAP proof-of-concept into a hardened, demonstrable platform with:
+- Real LMS and calendar integrations (replace mocks with adapters hitting sandbox/test APIs)
+- A production-ready retrieval pipeline (chunking, embedding, vector DB sync)
+- Event-driven processing for async tasks (announcement scheduling, email notifications)
+- Observability (metrics, logs, tracing) and CI to demonstrate quality attributes
+- Security & compliance controls (FERPA awareness, encryption, RBAC)
+- Deployment automation (k8s manifests, basic Helm chart/CI pipeline) and canary/blue-green strategy
+
+Deliverables (Iteration 2)
+- Updated logical architecture and deployment diagrams for staging/prod
+- 3 sequence diagrams for iteration-2 use cases + method tables
+- Vector ingestion & sync pipeline description + sample script
+- CI workflow to run tests and export artifacts
+- Monitoring and tracing plan + sample dashboards/alert ideas
+- Design decisions table updated with iteration-2 choices and justifications
+- Analysis and progress table (evidence: links to code, tests, images, logs)
+
+---
+
+## Logical Architecture (Iteration 2)
+
+### Architecture diagram (mermaid)
+```mermaid
+graph LR
+  User[User (Student / Faculty / Admin)]
+  WebUI[Web UI / Chat UI]
+  Mobile[Mobile App]
+  Ingress[Ingress / Load Balancer]
+  APIGW[API Gateway]
+  Auth[Auth Service (OIDC/SSO)]
+  EdgeServices[Edge Services (RateLimit, WAF)]
+  CoreSvc[Core Assistant Service (microservice)]
+  SessionSvc[Session Service (Redis/StatefulSet)]
+  IngestSvc[Ingestion Service]
+  EmbeddingSvc[Embedding Worker]
+  VectorDB[Vector DB (Pinecone/Milvus)]
+  AI[LLM Service (OpenAI or self-hosted)]
+  Postgres[Postgres (Primary DB)]
+  Analytics[Analytics Service]
+  MQ[Message Queue (Kafka/RabbitMQ)]
+  Mail[Mail Service (SendGrid)]
+  LMS[External LMS (Canvas API)]
+  Calendar[Calendar API (Office365/Google)]
+  Vault[Secrets Manager (Vault / AWS Secrets)]
+  Observ[Observability (Prometheus/Grafana + Jaeger)]
+  CDN[CDN / Static Hosting]
+
+  User --> WebUI
+  User --> Mobile
+  WebUI --> CDN
+  WebUI --> Ingress
+  Mobile --> Ingress
+  Ingress --> APIGW
+  APIGW --> Auth
+  APIGW --> EdgeServices
+  APIGW --> CoreSvc
+  CoreSvc --> SessionSvc
+  CoreSvc --> Postgres
+  CoreSvc --> VectorDB
+  CoreSvc --> MQ
+  CoreSvc --> EmbeddingSvc
+  CoreSvc --> AI
+  IngestSvc --> EmbeddingSvc
+  EmbeddingSvc --> VectorDB
+  IngestSvc --> Postgres
+  IngestSvc --> MQ
+  MQ --> IngestSvc
+  MQ --> Mail
+  CoreSvc --> LMS
+  CoreSvc --> Calendar
+  CoreSvc --> Analytics
+  APIGW --> Observ
+  CoreSvc --> Observ
+  EmbeddingSvc --> Vault
+  APIGW --> Vault
+```
+
+---
+
+## Component table (iteration 2 specifics)
+
+- API Gateway (Ingress + Kong/Traefik)
+  - Description: Single external entry point with auth, rate-limiting, WAF integration and observability.
+  - Responsibilities: TLS termination, JWT validation, ingress policies, auth passthrough, metrics.
+
+- Auth Service (OIDC/SSO integration)
+  - Description: Use institution SSO (SAML/OIDC) for authentication and user provisioning.
+  - Responsibilities: token issuance/introspection, role mapping, session claims, integration with Vault for keys.
+
+- Edge Services (rate-limit, WAF)
+  - Description: Managed or cloud WAF in front of API, API-level rate limiting to protect AI/third-party quotas.
+
+- Core Assistant Service (microservice)
+  - Description: Stateless microservice responsible for orchestrating conversations and enforcing RBAC and privacy policies.
+  - Responsibilities: handleMessage(session, message), apply privacy filters, call retrieval, call LLM, orchestrate adapters.
+
+- Session Service (Redis with persistence)
+  - Description: Stores short-term conversational state, typed context windows, and ephemeral session tokens.
+
+- Ingestion Service
+  - Description: Responsible for content fetching from LMS, document parsing, chunking, metadata extraction, and enqueuing embedding tasks.
+
+- Embedding Worker (batch/worker)
+  - Description: Pulls documents from queue, creates embeddings using chosen model, and writes to vector DB with metadata and document pointers. Implements chunking and dedup detection.
+
+- Vector DB (Pinecone/Milvus)
+  - Description: Stores embeddings and supports similarity search and metadata filtering (courseId, docType, timestamp).
+
+- LLM Service (OpenAI or self-hosted LLM)
+  - Description: Responsible for generation; supports streaming responses and retrieval-augmented prompts.
+
+- Message Queue (Kafka/RabbitMQ)
+  - Description: Event bus for async tasks: ingest jobs, email notifications, retries, background syncs.
+
+- Postgres (Primary)
+  - Description: Authoritative store for users, enrollments, course mappings, config, audit logs.
+
+- Mail Service
+  - Description: Integrates SendGrid/SES to send announcements, with retries and template rendering.
+
+- Observability (Prometheus, Grafana, Jaeger)
+  - Description: Metrics, dashboards, and distributed tracing to demonstrate latency, error rates, and pipeline health.
+
+- Secrets Manager (Vault / AWS Secrets Manager)
+  - Description: Secure storage for API keys, DB credentials, and encryption keys.
+
+- Analytics Service
+  - Description: Aggregates usage events, enrollment trends, response quality, A/B testing results.
+
+Rationale (iteration 2):
+- Move ingestion & embedding off the request path to avoid blocking user requests.
+- Introduce message queue for decoupling and retries.
+- Formalize observability and secrets management for production readiness.
+- Keep Core stateless for autoscaling.
+
+---
+
+## Sequence Diagrams & Methods (Iteration 2 use cases)
+
+Chosen iteration-2 use cases:
+1. Follow-up context: "What about the one after that?" (conversational context retention & reference)
+2. Bulk scheduled announcement: Faculty schedules announcement to LMS + email
+3. Ingestion & sync: Sync LMS course materials into Vector DB
+
+### Sequence 1: Follow-up question context (mermaid)
+```mermaid
+sequenceDiagram
+  participant U as User (Student)
+  participant UI as Web UI
+  participant APIGW as API Gateway
+  participant Auth as Auth Service
+  participant Core as Core Service
+  participant Session as Session Service
+  participant VDB as Vector DB
+  participant AI as LLM Service
+
+  U->>UI: "What are my deadlines for CS101?"
+  UI->>APIGW: POST /api/v2/converse {session,msg}
+  APIGW->>Auth: validate token
+  APIGW->>Core: handleMessage(session,msg)
+  Core->>Session: getSessionContext(sessionId)
+  Core->>VDB: retrieveContextualDocs(userId, courseId, window=7d)
+  Core->>AI: generateResponse(prompt, context)
+  AI-->>Core: stream response
+  Core-->>APIGW: response (stream)
+  APIGW-->>UI: stream response
+  Note over U,UI: User immediately asks follow-up
+  U->>UI: "What about the one after that?"
+  UI->>APIGW: POST /api/v2/converse {session, followup}
+  APIGW->>Core: handleFollowUp(session, followup)
+  Core->>Session: appendToContext(session, followup)
+  Core->>VDB: contextualRetrieval(with session window + followup)
+  Core->>AI: generateResponse(prompt+followup, context)
+  AI-->>Core: response
+  Core-->>APIGW: response
+  APIGW-->>UI: render response
+```
+
+Methods table (key methods)
+- POST /api/v2/converse(session, message)
+- Core.handleMessage(sessionId, message)
+- Session.getSessionContext(sessionId)
+- Session.appendToContext(sessionId, message)
+- VectorDB.retrieveContextualDocs(filters, topK)
+- AI.generateResponse(prompt, context, streaming=True)
+
+Notes:
+- Streaming responses reduce perceived latency — supported in iteration 2 via server-sent events or WebSockets.
+
+### Sequence 2: Bulk scheduled announcement (mermaid)
+```mermaid
+sequenceDiagram
+  participant F as Faculty UI
+  participant APIGW as API Gateway
+  participant Auth as Auth
+  participant Core as Core Service
+  participant MQ as Message Queue
+  participant Ingest as Ingestion Service
+  participant LMS as LMS Adapter
+  participant Mail as Mail Service
+  participant DB as Postgres
+
+  F->>APIGW: POST /api/v2/courses/{id}/announcements/schedule {payload, schedule}
+  APIGW->>Auth: check privileges
+  APIGW->>Core: scheduleAnnouncement(courseId, payload, schedule)
+  Core->>DB: persistAnnouncement(scheduleMeta)
+  Core->>MQ: publish(topic=announcements.scheduled, msg={id})
+  MQ->>Ingest: deliver job at scheduled time
+  Ingest->>LMS: createAnnouncement(courseId, payload)
+  LMS-->>Ingest: confirmation
+  Ingest->>Mail: enqueueCourseEmail(courseId, payload)
+  Mail->>MailProvider: send emails
+  MailProvider-->>Mail: delivery receipts
+  Mail-->>Ingest: success
+  Ingest-->>Core: updateAnnouncementStatus(id, success)
+  Core-->>DB: mark as delivered
+  Core-->>APIGW: return schedule confirmation
+```
+
+Methods table:
+- scheduleAnnouncement(courseId, payload, schedule)
+- publish(topic, message)
+- createAnnouncement(courseId, payload) [LMS Adapter]
+- enqueueCourseEmail(courseId, payload) [Mail]
+
+Notes:
+- Using MQ and Ingestion Service decouples scheduling and external system latencies and allows retries and dead-letter handling.
+
+### Sequence 3: Ingestion & Sync pipeline (mermaid)
+```mermaid
+sequenceDiagram
+  participant Cron as Scheduler
+  participant Ingest as Ingestion Service
+  participant Parser as Document Parser
+  participant MQ as Message Queue
+  participant Embed as Embedding Worker
+  participant VDB as Vector DB
+  participant DB as Postgres
+  participant LMS as LMS API
+
+  Cron->>Ingest: trigger sync for courseId list
+  Ingest->>LMS: listCourseResources(courseId)
+  LMS-->>Ingest: resourceList
+  Ingest->>Parser: fetchAndParse(resource)
+  Parser-->>Ingest: chunks + metadata
+  Ingest->>DB: recordResourceMetadata(resource, hash)
+  Ingest->>MQ: enqueueEmbeddingJob(chunks, metadata)
+  MQ->>Embed: deliver job
+  Embed->>AI: embedText(chunkText)
+  AI-->>Embed: embeddingVector
+  Embed->>VDB: upsert(embeddingVector, metadata)
+  Embed-->>DB: markChunkIndexed(resourceId, chunkId)
+  Note right of VDB: VectorDB contains metadata to support filter by courseId, docType, timestamp
+```
+
+Methods table:
+- listCourseResources(courseId)
+- fetchAndParse(resourceUrl) -> chunks[]
+- enqueueEmbeddingJob(chunks, metadata)
+- embedText(text)
+- vdb.upsert(vector, metadata)
+
+Notes:
+- Deduplication by content hash and TTL-based re-index policy: only reindex changed resources.
+
+---
+
+## Deployment Architecture (Iteration 2)
+
+### Deployment diagram (mermaid)
+```mermaid
+graph LR
+  subgraph Prod Cluster (k8s)
+    Ingress[Ingress / ALB]
+    APIGW[API Gateway (Kong/Traefik)]
+    Core[Core svc (Deployment)]
+    Embedding[Embedding Worker (Deployment / Jobs)]
+    Ingest[Ingestion Service (CronJob)]
+    Session[Redis (StatefulSet)]
+    Postgres[Postgres (Managed)]
+    VDB[Vector DB (Managed)]
+    MQ[Kafka / RabbitMQ (Managed)]
+    Observ[Prometheus + Grafana + Jaeger]
+    Vault[Vault / Secrets Manager]
+  end
+
+  User --> Ingress
+  Ingress --> APIGW
+  APIGW --> Core
+  Core --> Session
+  Core --> Postgres
+  Core --> VDB
+  Embedding --> VDB
+  Ingest --> VDB
+  Embedding --> AI[LLM API]
+  Core --> MQ
+  MQ --> Embedding
+  APIGW --> Observ
+  Core --> Observ
+  Core --> Vault
+```
+
+### Deployment table (iteration 2)
+- Cluster: Kubernetes (managed EKS/GKE/AKS) for staging/prod, with node pools for CPU vs GPU workloads.
+- Embedding Workers: Run on GPU node-pool if using on-prem/self-hosted models; otherwise CPU workers for managed APIs.
+- Vector DB: Managed (Pinecone / Milvus) or self-hosted Milvus with replicas — choose based on cost vs control.
+- Postgres: Managed cloud DB with read-replicas for analytics.
+- Redis: Clustered Redis for session and ephemeral context storage.
+- Message Queue: Managed Kafka/RabbitMQ for durability and replay.
+- Observability: Prometheus for metrics scraping, Grafana for dashboards, Jaeger for tracing (OTel).
+- Secrets Manager: Vault or cloud secrets integrated with k8s (External Secrets or CSI driver).
+- CI/CD: GitHub Actions or other pipeline to build images, run tests, and deploy to staging then promote to prod with canary/blue-green.
+
+Security & compliance notes:
+- Use TLS for all internal/external traffic. Enforce mTLS where possible between services.
+- Encrypt storage at rest for Postgres and vector DB (managed providers usually provide).
+- RBAC for API actions: ensure admin vs faculty vs student scopes are enforced in Auth and Core.
+- Enable audit logging (Postgres + Core logs) and store audit logs in immutable storage (S3 with retention policy) for FERPA compliance.
+
+---
+
+## Quality Attributes — Iteration 2 (addressed & evidence)
+
+Targeted attributes (and iteration 2 implementation & evidence)
+
+1) Security & Compliance (FERPA)
+- Controls:
+  - SSO integration, role-based access checks, least-privilege service accounts.
+  - Audit logs for data access events.
+  - Data minimization: redact PII from prompts; hashing of identifiers in telemetry.
+- Evidence:
+  - Tests: tests/test_rbac.py
+  - Example audit log sample saved to docs/audit_sample.log
+
+2) Scalability
+- Controls:
+  - Core stateless microservice with HPA (autoscaling) rules based on CPU and custom latency metrics.
+  - Separate worker pools for embedding jobs and ingestion.
+- Evidence:
+  - k8s HPA manifests in k8s/hpa.yaml
+  - Load test script (scripts/load_test.sh) with results stored as artifacts.
+
+3) Availability & Fault Tolerance
+- Controls:
+  - Retries with exponential backoff for external calls.
+  - Circuit breaker around LLM provider to avoid cascading failures.
+  - MQ and dead-letter queues for failed ingest jobs.
+- Evidence:
+  - tests/test_retry_and_circuit_breaker.py
+  - Sample logs showing retry attempts stored in logs/retry_demo.log
+
+4) Observability & Debuggability
+- Controls:
+  - Distributed tracing using OpenTelemetry and Jaeger.
+  - Prometheus metrics exported by Core, embedding workers, and Ingestion svc.
+  - Dashboards for 95th percentile latency, error rates, embedding throughput.
+- Evidence:
+  - prometheus/metrics.yaml (example metrics to scrape)
+  - grafana/dashboard.json (sample dashboard file)
+
+5) Performance (latency)
+- Controls:
+  - Caching of recent retrievals in Redis with TTL.
+  - Streaming generation to improve perceived latency.
+- Evidence:
+  - scripts/measure_latency.sh with sample outputs in artifacts/latency_report.md
+
+6) Maintainability & Testability
+- Controls:
+  - Clear adapter pattern for third-party integrations.
+  - Unit and integration tests; test harness for ingest pipeline.
+- Evidence:
+  - tests/ folder with test coverage aim > 60% for iteration 2 modules.
+
+Acceptance for "Exceeds"
+- Provide tests and sample logs/screenshots to demonstrate these attributes, commit CI workflow that runs them.
+
+---
+
+## Design Decisions (Iteration 2)
+
+| ID | Decision | Alternatives | Trade-offs / Rationale | Status |
+|----|---------:|-------------:|------------------------|--------|
+| DD2-1 | Microservice decomposition (Core + Ingest + Embedding Workers) | Monolith | Microservices increase operational complexity but allow scaling workers separately, improving cost & performance for embedding jobs. | Chosen |
+| DD2-2 | Use managed Vector DB (Pinecone) vs self-hosted Milvus | Self-hosted gives control/cost tradeoffs | Managed reduces ops; self-hosted gives lower long-term cost and more control. Tradeoff: ops overhead. | Chosen: Manage for iteration 2, re-evaluate for scale |
+| DD2-3 | Use message queue (Kafka) for ingest and scheduling | Direct synchronous calls | MQ enables durability, retries, and decoupling — chosen for reliability. | Chosen |
+| DD2-4 | Streaming responses (SSE/WebSockets) | Polled responses | Streaming reduces perceived latency for long LLM responses; requires websocket support in UI. | Chosen |
+| DD2-5 | Use OpenTelemetry for tracing | Vendor-specific APM | OTel standard supports multi-provider export; vendor APM may provide richer features but vendor lock-in. | Chosen |
+
+Justification:
+- Each decision favors reliability, observability, and the ability to demonstrate production-readiness for the rubric.
+
+---
+
+## Analysis & Progress (Iteration 1 → Iteration 2)
+
+Progress table example (update when artifacts are added to repo)
+
+| Item | Iteration 1 | Iteration 2 plan/status | Proof / Link |
+|------|-------------|-------------------------|--------------|
+| Logical Architecture | Done (ADD/iteration1/*) | Extended with ingestion, MQ, secrets manager | This file (ARCHITECTURE) |
+| Sequences | 3 diagrams (iteration1) | 3 new diagrams above; method names consistent | This file (SEQUENCES) |
+| Deployment | Dev deployment (iteration1) | Staging/prod + HPA + canary strategy planned | k8s/ manifests to add |
+| Quality Attributes | Security+Latency documented (iteration1) | Expanded: FERPA, scaling, tracing, alerts | tests/, prometheus/, grafana/ |
+| Design Decisions | Iteration1 DD table | Iteration2 DDs added (above) | This file |
+| Implementation | Basic API skeleton | Ingest pipeline, embedding workers, MQ integration — in progress | src/ingest, src/embedding (create) |
+| Tests & CI | Suggested tests | CI workflow (GitHub Actions) running tests/builds — to be added | .github/workflows/ci.yml |
+
+Short analysis:
+- Iteration 2 focuses on reliability and demonstrability: pipeline proofs (ingest->embed->vdb), monitoring dashboards, and secure integrations to maximize rubric points for quality attributes, deployment architecture, and logical architecture.
+
+---

@@ -26,3 +26,10 @@ Kingsley Qiu - Handled the sequence diagrams and architectural diagrams for both
 Aaraan Mahmood - Handled the word content for both iterations
 
 Farhan Shameer - Handled the deployment diagrams for both iterations
+
+
+Deliverable 2: ADD Iteration 1 & 2
+- ADD_iteration1.md -> Formats the written content to look more professional
+- ADD_iteration2.md -> Formats the written content to look more professional
+- Iteration 1 Diagrams folder -> Contains the images for all the diagrams necessary for Iteration 1
+- Iteration 2 Diagrams folder -> Contains the images for all the diagrams necessary for Iteration 2

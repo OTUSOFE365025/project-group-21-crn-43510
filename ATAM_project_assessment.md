@@ -59,7 +59,32 @@ Below are the ATAM artifacts required by the assessment.
 
 ---
 
+## C. ATAM Utility Tree
 
+The utility tree below captures prioritized quality attributes and representative scenarios (leaf-level testable scenarios). The tree is prioritized by business importance and technical risk.
+
+- Utility: Deliver correct, timely, and secure responses for university users
+  - Quality Attribute: Performance (High priority)
+    - Scenario P1: Retrieval latency for tenant-scoped queries has P95 < 200ms (vector query + network)
+    - Scenario P2: End-to-end response (retrieval + LLM) P95 < 2s under target load (50–200 QPS)
+    - Scenario P3: Under increased load (x10), system degrades gracefully (queueing/backpressure)
+  - Quality Attribute: Security / Compliance (High priority)
+    - Scenario S1: No cross-tenant data read allowed via API (0/1000 synthetic attempts)
+    - Scenario S2: All access events produce audit entries with tenant_id, user, resource, action
+    - Scenario S3: Compromised token can be revoked and auditable within 1 minute
+  - Quality Attribute: Availability / Reliability (High priority)
+    - Scenario A1: Ingestion pipeline processes 10k jobs with zero unhandled failures (with DLQ metric)
+    - Scenario A2: When LMS is down, announcements are queued and delivered after recovery (no data loss)
+    - Scenario A3: Worker autoscaling restores throughput within defined SLO after injected failure
+  - Quality Attribute: Cost Efficiency (Medium)
+    - Scenario C1: Hybrid retrieval mode only triggered when confidence threshold is low; cost delta < X%
+  - Quality Attribute: Maintainability (Medium)
+    - Scenario M1: Adapters can be replaced with < 2 hours downtime; tests cover integration surface
+
+For each leaf scenario, attach:
+- Acceptance criteria (numeric)
+- Test harness / script to reproduce
+- Sensitivity/impact notes
 
 ---
 

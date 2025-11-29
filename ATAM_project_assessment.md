@@ -34,28 +34,28 @@ Below are the ATAM artifacts required by the assessment.
 ## B. Risks, Non-Risks, Sensitivity Points, and Tradeoffs
 
 ### Risks (expanded)
-- Ingestion reliability (R1): The ingestion pipeline depends on MQ settings; misconfigured retries/backoff can either drop messages or produce large backlogs. Mitigation: DLQ, idempotent handlers, per-tenant throttling, operator alerts.
-- Tenant scoping failure (R2): Mistakes in tenant claim validation (JWT) or DB access controls could cause cross-tenant data leakage. Mitigation: gateway-level claim validation, DB RLS or per-tenant schemas, security tests.
-- Vector DB filter-induced latency (R3): Heavy metadata constraints can yield low candidate sizes or force expensive filter handling. Mitigation: profile filter cardinalities, pre-filter then vector-sim on candidate set, index tuning.
-- Hybrid retrieval cost (R4): Combining keyword + vector strategies increases compute/storage. Mitigation: adaptive hybrid mode and cost monitoring, prune old embeddings.
-- LMS adapter fragility (R5): External LMS API changes or rate limits. Mitigation: circuit-breaker pattern, retries, cached results and fallbacks.
+- Ingestion reliability (R1): The ingestion flow is sensitive to MQ configuration; incorrect retry or backoff settings can lead to message loss or major queue buildup. Mitigation: use DLQs, idempotent consumers, tenant-level throttling, and operational alerts.
+- Tenant scoping failure (R2): Errors in validating tenant claims (JWT) or enforcing database access rules may expose data across tenants. Mitigation: enforce claims at the gateway, use DB row-level security or tenant-specific schemas, and run targeted security tests.
+- Vector DB filter-driven latency (R3): Complex metadata filters can reduce candidate pools or push the system into costly filtering paths. Mitigation: analyze filter cardinality, apply pre-filtering before vector similarity search, and tune indexes.
+- Hybrid retrieval overhead (R4): Using both keyword and vector retrieval boosts compute and storage usage. Mitigation: enable adaptive hybrid selection with cost monitoring and remove stale embeddings.
+- LMS adapter brittleness (R5): External LMS APIs may change or impose rate limits. Mitigation: apply circuit breakers, retries, caching layers, and fallback behavior.
 
 ### Non-Risks (tested & validated)
-- Autoscaling (HPA) responsiveness: Iteration 2 prototype verified HPA reacts to CPU/latency metrics.
-- Streaming LLM responses: Iteration 2 load tests showed streaming can handle 1k concurrent users without degradation.
-- Circuit-breakers for LMS: Prototype simulations validated graceful fallback messaging during LMS outage simulations.
+- Autoscaling (HPA) responsiveness: Tests in Iteration 2 confirmed that the HPA correctly scales based on CPU and latency signals.
+- Streaming LLM responses: Load testing in Iteration 2 demonstrated that streaming reliably supports ~1k concurrent users with no performance drop.
+- LMS circuit-breakers: Prototype exercises validated that circuit-breakers provide smooth fallback messaging during simulated LMS outages.
 
 ### Sensitivity Points (small change → big effect)
-- Vector index parameters (HNSW efSearch/efConstruction): small parameter shifts can swing P95 latency and recall.
-- MQ retry settings (initialBackoff, backoffFactor, maxRetries): small changes change backlog growth behavior significantly.
-- JWT claims format and validation: minimal deviations (missing tenant claim) flip authorization decisions.
-- Embedding batch size thresholds: changes affect GPU throughput and latency.
+- Vector index configuration (HNSW efSearch/efConstruction): Even minor tuning adjustments can heavily impact P95 latency and recall rates.
+- MQ retry configuration (initialBackoff, backoffFactor, maxRetries): Small tweaks can meaningfully alter how quickly backlogs form or drain.
+- JWT claim structure and validation: Slight formatting issues (e.g., missing tenant claim) can invert authorization results.
+- Embedding batch-size limits: Adjusting batch size directly influences GPU efficiency, throughput, and response latency.
 
 ### Tradeoffs (selected)
-- Performance vs Cost: Hybrid retrieval increases precision but raises compute and storage cost.
-- Security vs Modifiability: Per-tenant schemas and strict RBAC improve isolation but add development and ops complexity.
-- Availability vs Performance: Aggressive retries increase reliability at the cost of potential message storms and temporary performance hits.
-- Simplicity vs Flexibility: Shared multi-tenant cluster is cheaper and simpler operationally; per-tenant namespaces increase isolation but complicate deployment and management.
+- Performance vs Cost: Hybrid retrieval improves accuracy but increases computational and storage expenditure.
+- Security vs Modifiability: Using per-tenant schemas with strict RBAC strengthens isolation but raises development and operational overhead.
+- Availability vs Performance: More aggressive retry policies enhance robustness but risk message storms and short-lived performance dips.
+- Simplicity vs Flexibility: A shared multi-tenant cluster is operationally simple and cost-effective, while per-tenant namespaces boost isolation at the expense of deployment and management complexity.
 
 ---
 
